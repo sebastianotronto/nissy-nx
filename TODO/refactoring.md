@@ -20,9 +20,22 @@
 
 ## Code style
 
-* Stop declaring all variables at the beginning of a function.
-* Remove variable names from prototypes.
-* Sort function implementations alphabetically, ignore static vs non static.
+* Use goto for error handling (if needed)
+* Headers: blank line between <> and "" includes
+* Remove variable names from prototypes (debatable).
+* Stop declaring all variables at the beginning of a function (debatable).
 * Rename functions and variable to have a consistent naming scheme.
+* Sort functions: prototypes in logical blocks, then alphabetic.
+  Implementations in the same order as the prototypes.
+* Order of variable declarations (in files, functions and structs):
+  Size first (large to small), then alphabetic.
+* Indent: make second level indent consistent to 4 spaces.
+  Try to avoid long statements.
+* Avoid include statements in .h files, use ifdef guards in .c files
+  (to reconsider as part of the redesign).
 * Functions that copy data: swap src and dest, follow memcpy standard.
-* Read style(9) and decide what to implement.
+
+## Generic
+
+* Avoid malloc and free/new function pointers for cube objects,
+  use array of char on stack.

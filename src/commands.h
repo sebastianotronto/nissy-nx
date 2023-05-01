@@ -6,6 +6,7 @@
 #include "solve.h"
 #include "steps.h"
 #include "solver_step.h"
+#include "solver_nxopt31.h"
 #include "threader_single.h"
 #include "threader_eager.h"
 

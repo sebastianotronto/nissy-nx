@@ -151,6 +151,15 @@ fst_inverse(FstCube fst)
 	return ret;
 }
 
+bool
+fst_is_solved(FstCube fst)
+{
+	/* We only check one orientation */
+
+	return fst.uf_eofb == 0 && fst.uf_eposepe == 0 &&
+	       fst.uf_coud == 0 && fst.uf_cp == 0;
+}
+
 FstCube
 fst_move(Move m, FstCube fst)
 {

@@ -212,10 +212,9 @@ drfbfin_drfb = {
 /* TODO: htrfin_htr */
 
 ChoiceStep *csteps[] = {
-/* TODO: re-implement optimal
+/* TODO: this is not a step anymore
 	&optimal_HTM,
 */
-
 	&eoany_HTM, &eofb_HTM, &eorl_HTM, &eoud_HTM,
 	&drany_HTM, &drud_HTM, &drrl_HTM, &drfb_HTM,
 	&dranyfin_DR, &drudfin_drud, &drrlfin_drrl, &drfbfin_drfb,

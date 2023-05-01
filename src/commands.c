@@ -221,14 +221,20 @@ solve_exec(CommandArgs *args)
 	make_solved(&c);
 	apply_alg(args->scramble, &c);
 /* TODO: adjust */
-/*	threader = &threader_single;*/
-	threader = &threader_eager;
+	threader = &threader_single;
+/*	threader = &threader_eager;*/
 
 /* TODO: adjust */
+/* This was to solve steps
 	int i;
 	for (i = 0; args->cs->step[i] != NULL; i++)
 		solver[i] = new_stepsolver_lazy(args->cs->step[i]);
 	solver[i] = NULL;
+*/
+
+	prepare_solver_nxopt31();
+	solver[0] = &solver_nxopt31;
+	solver[1] = NULL;
 	sols = solve(&c, args->opts, solver, threader);
 
 	if (args->opts->count_only)

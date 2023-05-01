@@ -20,7 +20,9 @@ validate to null */
 /* TODO: we also have to check if cancel with NISS;
 we can't because we have no access to the s->final field
 this should be done by the step's validator? */
-		sol = solver->validate_solution(solver->param,arg->current_alg);
+		sol = solver->validate_solution == NULL ?
+		    arg->current_alg :
+		    solver->validate_solution(solver->param, arg->current_alg);
 		bool accepted = sol != NULL;
 		bool too_short = arg->current_alg->len != arg->d;
 

@@ -1,6 +1,10 @@
 #ifndef SOLVE_H
 #define SOLVE_H
 
+/* TODO: remove multiple solvers?
+	can just run solver multiple times and then merge the results
+*/
+
 #include "moves.h"
 
 #define MAX_SOLVERS 99
@@ -38,6 +42,7 @@ struct solver {
 /* TODO: remove alloc? */
 /* TODO: revisit apply_move, maybe apply_alg? or both? */
 	void *     (*alloc_cubedata)(void *);
+	/* TODO: replace by knowing size and doing memcpy? */
 	void       (*copy_cubedata)(void *, void *, void *);
 	void       (*free_cubedata)(void *, void *);
 	void       (*invert_cube)(void *, void *);
