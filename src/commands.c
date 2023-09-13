@@ -2,8 +2,6 @@
 
 #include "commands.h"
 
-static bool             read_cs(CommandArgs *args, char *str);
-static bool             read_scrtype(CommandArgs *args, char *str);
 static bool             read_scramble(int c, char **v, CommandArgs *args);
 
 /* Arg parsing functions implementation **************************************/
@@ -83,8 +81,6 @@ solve_parse_args(int c, char **v)
 			}
 			a->opts->optimal = val;
 			infinitesols = true;
-		} else if (!strcmp(v[i], "-N")) {
-			a->opts->can_niss = true;
 		} else if (!strcmp(v[i], "-i")) {
 			a->scrstdin = true;
 		} else if (!strcmp(v[i], "-v")) {
@@ -95,8 +91,6 @@ solve_parse_args(int c, char **v)
 			a->opts->print_number = false;
 		} else if (!strcmp(v[i], "-c")) {
 			a->opts->count_only = true;
-		} else if (!read_cs(a, v[i])) {
-			break;
 		}
 	}
 
@@ -104,36 +98,6 @@ solve_parse_args(int c, char **v)
 		a->opts->max_solutions = 1000000; /* 1M = +infty */
 
 	a->success = (a->scrstdin && i == c) || read_scramble(c-i, &v[i], a);
-	return a;
-}
-
-CommandArgs *
-scramble_parse_args(int c, char **v)
-{
-	int i;
-	long val;
-
-	CommandArgs *a = new_args();
-
-	a->success = true;
-	a->n       = 1;
-
-	for (i = 0; i < c; i++) {
-		if (!strcmp(v[i], "-n") && i+1 < c) {
-			val = strtol(v[++i], NULL, 10);
-			if (val < 1 || val > 1000000) {
-				fprintf(stderr,
-					"Invalid number of scrambles.\n");
-				a->success = false;
-				return a;
-			}
-			a->n = val;
-		} else if (!read_scrtype(a, v[i])) {
-			a->success = false;
-			return a;
-		}
-	}
-
 	return a;
 }
 
@@ -246,95 +210,6 @@ solve_exec(CommandArgs *args)
 }
 
 void
-scramble_exec(CommandArgs *args)
-{
-	Cube cube;
-	Alg *scr, *ruf, *aux;
-	int i, j, eo, ep, co, cp;
-	uint64_t ui, uj, uk;
-
-	srand(time(NULL));
-
-	for (i = 0; i < args->n; i++) {
-
-		if (!strcmp(args->scrtype, "dr")) {
-			ui = rand() % FACTORIAL8;
-			uj = rand() % FACTORIAL8;
-			uk = rand() % FACTORIAL4;
-
-			make_solved(&cube);
-			index_to_perm(ui, 8, cube.cp);
-			index_to_perm(uj, 8, cube.ep);
-			index_to_perm(uk, 4, cube.ep + 8);
-			for (j = 8; j < 12; j++)
-				cube.ep[j] += 8;
-		} else if (!strcmp(args->scrtype, "htr")) {
-			make_solved(&cube);
-			/* TODO */
-		} else {
-			ep = rand() % FACTORIAL12;
-			cp = rand() % FACTORIAL8;
-			eo = rand() % POW2TO11;
-			co = rand() % POW3TO7;
-
-			if (!strcmp(args->scrtype, "eo")) {
-				eo = 0;
-			} else if (!strcmp(args->scrtype, "corners")) {
-				eo = 0;
-				ep = 0;
-			} else if (!strcmp(args->scrtype, "edges")) {
-				co = 0;
-				cp = 0;
-			}
-
-			make_solved(&cube);
-			index_to_perm(ep, 12, cube.ep);
-			index_to_perm(cp,  8, cube.cp);
-			int_to_sum_zero_array(eo, 2, 12, cube.eo);
-			int_to_sum_zero_array(co, 3,  8, cube.co);
-		}
-
-		if (!is_admissible(&cube)) {
-			if (!strcmp(args->scrtype, "corners"))
-				swap(&cube.cp[UFR], &cube.cp[UFL]);
-			else
-				swap(&cube.ep[UF], &cube.ep[UB]);
-		}
-
-		/* TODO: can be optimized for htr and dr using htrfin, drfin */
-		/*
-		TODO: solve_2phase was removed
-		scr = solve_2phase(&cube, 1);
-		*/
-
-		if (!strcmp(args->scrtype, "fmc")) {
-			aux = new_alg("");
-			copy_alg(scr, aux);
-			/* Trick to rufify for free: rotate the scramble  *
-			 * so that it does not start with F or end with R */
-			for (j = 0; j < NROTATIONS; j++) {
-				if (base_move(scr->move[0]) != F &&
-				    base_move(scr->move[0]) != B &&
-				    base_move(scr->move[scr->len-1]) != R &&
-				    base_move(scr->move[scr->len-1]) != L)
-					break;
-				copy_alg(aux, scr);
-				transform_alg(j, scr);
-			}
-			copy_alg(scr, aux);
-			ruf = new_alg("R' U' F");
-			copy_alg(ruf, scr);
-			compose_alg(scr, aux);
-			compose_alg(scr, ruf);
-			free_alg(aux);
-			free_alg(ruf);
-		}
-		print_alg(scr, false);
-		free_alg(scr);
-	}
-}
-
-void
 gen_exec(CommandArgs *args)
 {
 /* TODO:
@@ -348,76 +223,6 @@ gen_exec(CommandArgs *args)
 
 	fprintf(stderr, "Done!\n");
 }
-
-void
-invert_exec(CommandArgs *args)
-{
-	Alg *inv;
-
-	inv = inverse_alg(args->scramble);
-	print_alg(inv, false);
-
-	free_alg(inv);
-}
-
-void
-steps_exec(CommandArgs *args)
-{
-	int i;
-
-	for (i = 0; csteps[i] != NULL; i++)
-		printf("%-15s %s\n", csteps[i]->shortname, csteps[i]->name);
-}
-
-void
-commands_exec(CommandArgs *args)
-{
-	int i;
-
-	for (i = 0; commands[i] != NULL; i++)
-		printf("%s\n", commands[i]->usage);
-
-}
-
-void
-freemem_exec(CommandArgs *args)
-{
-/* TODO:
-	int i;
-
-	for (i = 0; all_pd[i] != NULL; i++)
-		free_pd(all_pd[i]);
-
-	for (i = 0; all_sd[i] != NULL; i++)
-		free_sd(all_sd[i]);
-*/
-}
-
-void
-print_exec(CommandArgs *args)
-{
-	Cube c;
-
-	make_solved(&c);
-	apply_alg(args->scramble, &c);
-	print_cube(&c);
-}
-
-/*
-void
-twophase_exec(CommandArgs *args)
-{
-	Cube c;
-	Alg *sol;
-
-	make_solved(&c);
-	apply_alg(args->scramble, &c);
-	sol = solve_2phase(&c, 1);
-
-	print_alg(sol, false);
-	free_alg(sol);
-}
-*/
 
 void
 help_exec(CommandArgs *args)
@@ -445,33 +250,6 @@ void
 quit_exec(CommandArgs *args)
 {
 	exit(0);
-}
-
-void
-cleanup_exec(CommandArgs *args)
-{
-	Alg *alg;
-
-	alg = cleanup(args->scramble);
-	print_alg(alg, false);
-
-	free_alg(alg);
-}
-
-void
-unniss_exec(CommandArgs *args)
-{
-	Alg *aux;
-
-	aux = unniss(args->scramble);
-	print_alg(aux, false);
-	free(aux);
-}
-
-void
-version_exec(CommandArgs *args)
-{
-	printf(VERSION"\n");
 }
 
 /* Local functions implementation ********************************************/
@@ -507,38 +285,6 @@ read_scramble(int c, char **v, CommandArgs *args)
 	return args->scramble->len > 0;
 }
 
-static bool
-read_scrtype(CommandArgs *args, char *str)
-{
-	int i;
-	static char *scrtypes[20] =
-	    { "eo", "corners", "edges", "fmc", "dr", "htr", NULL };
-
-	for (i = 0; scrtypes[i] != NULL; i++) {
-		if (!strcmp(scrtypes[i], str)) {
-			strcpy(args->scrtype, scrtypes[i]);
-			return true;
-		}
-	}
-
-	return false;
-}
-
-static bool
-read_cs(CommandArgs *args, char *str)
-{
-	int i;
-
-	for (i = 0; csteps[i] != NULL; i++) {
-		if (!strcmp(csteps[i]->shortname, str)) {
-			args->cs = csteps[i];
-			return true;
-		}
-	}
-
-	return false;
-}
-
 /* Public functions implementation *******************************************/
 
 void
@@ -567,8 +313,7 @@ new_args()
 	args->scramble = NULL; /* initialized in read_scramble */
 	args->opts = malloc(sizeof(SolveOptions));
 
-	/* step and command are static */
-	args->cs = csteps[0]; /* default: first step in list */
+	args->cs = NULL;
 	args->command = NULL;
 
 	return args;

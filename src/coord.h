@@ -27,10 +27,6 @@ extern Coordinate coord_epud;
 extern Coordinate coord_eofbepos;
 extern Coordinate coord_coud_cpudsep;
 extern Coordinate coord_eofbepos_sym16;
-extern Coordinate coord_cp_sym16;
-extern Coordinate coord_corners_sym16;
-extern Coordinate coord_drud_sym16;
-extern Coordinate coord_drudfin_noE_sym16;
 extern Coordinate coord_nxopt31;
 
 extern Coordinate *all_coordinates[];
